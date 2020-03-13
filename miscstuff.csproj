@@ -7,8 +7,8 @@
     <ProjectGuid>{25B40FB7-6269-4EFE-9EE2-6A2647A6D87F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>PhaserArray.XPForKills</RootNamespace>
-    <AssemblyName>XPForKills</AssemblyName>
+    <RootNamespace>Random.miscstuff</RootNamespace>
+    <AssemblyName>miscstuff</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
