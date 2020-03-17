@@ -67,6 +67,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="getdistance.cs" />
     <Compile Include="miscstuff.cs" />
     <Compile Include="miscstuffConfiguration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
