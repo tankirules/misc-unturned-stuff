@@ -31,7 +31,7 @@ namespace Random.miscstuff
             {
                 markerposition = player.Player.quests.markerPosition;
                 playerposition = player.Position;
-                UnturnedChat.Say(caller, Convert.ToString(System.Math.Sqrt(System.Math.Pow((markerposition.x - playerposition.x), 2) + System.Math.Pow((markerposition.y - playerposition.y), 2))));
+                UnturnedChat.Say(caller, Convert.ToString(System.Math.Sqrt(System.Math.Pow((markerposition.x - playerposition.x), 2) + System.Math.Pow((markerposition.z - playerposition.z), 2))));
             }
             else {
                 UnturnedChat.Say(caller, "You have not placed a marker!");
