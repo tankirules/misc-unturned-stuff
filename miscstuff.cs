@@ -12,8 +12,8 @@ namespace Random.miscstuff
 {
     public class miscstuff : RocketPlugin<miscstuffConfiguration>
     {
-        private static miscstuff Instance;
-        private static miscstuffConfiguration Config;
+        public static miscstuff Instance;
+        public static miscstuffConfiguration Config;
         protected override void Load()
         {
             UnturnedPlayerEvents.OnPlayerUpdateStat += OnPlayerUpdateStat;
