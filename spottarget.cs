@@ -71,15 +71,31 @@ namespace Random.miscstuff
                         
                         var targetconverted = target.Value;
                         var callerposition = playercaller.Position;
-                        var callangle = Vector3.Angle(callerposition, targetconverted);
-                        var currentrotation = playercaller.Rotation;
-                        Rocket.Core.Logging.Logger.Log("playercaller rotation:" + Convert.ToString(currentrotation));
-                        Rocket.Core.Logging.Logger.Log("bearing from player to target" + Convert.ToString(Vector3.Angle(callerposition, targetconverted)));
-                        Rocket.Core.Logging.Logger.Log("bearing from target to player:" + Convert.ToString(Vector3.Angle(targetconverted, callerposition)));
+
+                        var zoffset = targetconverted.z - callerposition.z;
+                        var xoffset = targetconverted.x - callerposition.x;
+                        var radianangle = System.Math.Atan((zoffset) / (xoffset));
+                        var degreeangle = radianangle * 180 / System.Math.PI;
+                        double bearing;
+                        if ((zoffset > 0 && xoffset > 0) || (zoffset < 0 && xoffset > 0))
+                        {
+                            bearing = 90 - degreeangle;
+
+                        }
+                        else if ((zoffset < 0 && xoffset < 0) || (zoffset > 0 && xoffset < 0))
+                        {
+                            bearing = 270 - degreeangle;
+                        }
+                        else
+                        {
+                            bearing = 0;
+                        }
+                    
+                            var currentrotation = playercaller.Rotation;                       
                         UnturnedChat.Say(playercaller, "Range to target spotted: " + Convert.ToString(System.Math.Sqrt(System.Math.Pow((targetconverted.x -
-                                callerposition.x), 2) + System.Math.Pow((targetconverted.z - callerposition.z), 2))) + " at bearing: " + Convert.ToString(callangle + currentrotation));
-                        Rocket.Core.Logging.Logger.Log("Before foreach");
-                        Rocket.Core.Logging.Logger.Log(Convert.ToString(callangle));
+                                callerposition.x), 2) + System.Math.Pow((targetconverted.z - callerposition.z), 2))) + " at bearing: " + Convert.ToString(bearing));
+
+                      
 
                         var currentvehicle = playercaller.CurrentVehicle;
                         foreach (Passenger vehiclepassenger in currentvehicle.passengers)
@@ -92,10 +108,30 @@ namespace Random.miscstuff
                             passengerposition.y += miscstuff.Config.artyshipoffsetlisty;
                             passengerposition.x += miscstuff.Config.artyshipoffsetlistx;
                             passengerposition.z += miscstuff.Config.artyshipoffsetlistz;
-                            var angle = Vector3.Angle(passengerposition, targetconverted);
-                            UnturnedChat.Say(playerpassenger, "Range to target by spotter: " + Convert.ToString(System.Math.Sqrt(System.Math.Pow((targetconverted.x -
-                                passengerposition.x), 2) + System.Math.Pow((targetconverted.z - passengerposition.z), 2))) + " at bearing: " + Convert.ToString(passengerrotation + angle), Color.white);
 
+
+                            zoffset = targetconverted.z - passengerposition.z;
+                            xoffset = targetconverted.x - passengerposition.x;
+                            radianangle = System.Math.Atan((zoffset) / (xoffset));
+                            degreeangle = radianangle * 180 / System.Math.PI;
+                            double angle ;
+                            Rocket.Core.Logging.Logger.Log("Degree angle is" + Convert.ToString(degreeangle));
+                            if ((zoffset > 0 && xoffset > 0) || (zoffset < 0 && xoffset > 0))
+                            {
+                                angle = 90 - degreeangle;
+
+                            }
+                            else if ((zoffset < 0 && xoffset < 0) || (zoffset > 0 && xoffset < 0))
+                            {
+                               angle = 270 - degreeangle;
+                            }
+                            else
+                            {
+                                angle = 0;
+                            }
+                            UnturnedChat.Say(playerpassenger, "Range to target by spotter: " + playercaller.DisplayName + Convert.ToString(System.Math.Sqrt(System.Math.Pow((targetconverted.x -
+                                passengerposition.x), 2) + System.Math.Pow((targetconverted.z - passengerposition.z), 2))) + " at bearing: " + Convert.ToString(angle), Color.white);
+                         
 
 
 
