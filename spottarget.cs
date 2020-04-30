@@ -13,10 +13,11 @@ using System.Linq;
 using System;
 namespace Random.miscstuff
 {
+    //spots a target for all players in a vehicle, returns distance and bearing for each individual
     public class spottargetcommand : IRocketCommand
     {
 
-        private static spottargetcommand Instance;
+        
         public AllowedCaller AllowedCaller => AllowedCaller.Player;
         public string Name => "spottarget";
         public string Help => "Gets the distance from the gunners in an arty ship to the target the spotter is looking at";

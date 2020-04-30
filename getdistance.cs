@@ -13,8 +13,10 @@ using System.Linq;
 using System;
 namespace Random.miscstuff
 {
+    //gets distance from player to marker on map
     public class getdistancecommand : IRocketCommand
     {
+        
         public AllowedCaller AllowedCaller => AllowedCaller.Player;
         public string Name => "getdistance";
         public string Help => "Gets the straight line distance from player to their marker";

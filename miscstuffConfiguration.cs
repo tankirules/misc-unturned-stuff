@@ -13,9 +13,12 @@ namespace Random.miscstuff
 
         public int ZombieXP;
         public int MegaXP;
-        public bool Siphon;
-		public void LoadDefaults()
-		{
+        public bool Siphon;        
+        public List<Registereddoortype> listofregistereddoors;
+        public void LoadDefaults()  
+        {
+            listofregistereddoors = new List<Registereddoortype>
+            { };
             ZombieXP = 0;
             MegaXP = -1000;
             Siphon = false;
