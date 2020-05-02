@@ -18,7 +18,7 @@ namespace Random.miscstuff
 {
     public class raycastdoor
     {
-        public InteractableDoorHinge Getdoor(UnturnedPlayer player){
+        public static InteractableDoorHinge Getdoor(UnturnedPlayer player){
             PlayerLook look = player.Player.look;
             RaycastHit raycastHit;
             if (!PhysicsUtility.raycast(new Ray(look.aim.position, look.aim.forward), out raycastHit, 100, RayMasks.BARRICADE, 0))

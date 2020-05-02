@@ -31,19 +31,8 @@ namespace Random.miscstuff
         public void Execute(IRocketPlayer caller, string[] args)
         {
             var PlayerCaller = (UnturnedPlayer)caller;
-            PlayerLook look = PlayerCaller.Player.look;
-            RaycastHit raycastHit;
-            if (args.Length != 0)
-            {
-                UnturnedChat.Say(caller, "You are not supposed to have any arguments", Color.red);
-                return;
-            }
-            if (!PhysicsUtility.raycast(new Ray(look.aim.position, look.aim.forward), out raycastHit, 100, RayMasks.BARRICADE, 0))
-            {
-                UnturnedChat.Say(caller, "Not looking at an object!",Color.red);
-                return;
-            }
-            InteractableDoorHinge component = raycastHit.transform.GetComponent<InteractableDoorHinge>();
+           
+            InteractableDoorHinge component = raycastdoor.Getdoor(PlayerCaller);
             if (component != null)
             {
                 bool isregistered = false;
