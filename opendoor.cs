@@ -46,6 +46,7 @@ namespace Random.miscstuff
             InteractableDoorHinge component = raycastHit.transform.GetComponent<InteractableDoorHinge>();
             if (component != null)
             {
+                bool isregistered = false;
                 InteractableDoor door = component.door;
                 bool flag = !door.isOpen;
                 byte x;
@@ -54,10 +55,11 @@ namespace Random.miscstuff
                 ushort index;
                 BarricadeRegion barricadeRegion;
                 BarricadeManager.tryGetInfo(door.transform, out x, out y, out plant, out index, out barricadeRegion);
-                foreach (Registereddoortype doorinfo in miscstuff.Instance.Configuration.Instance.listofregistereddoors)
+                foreach (Registereddoortype doorinfo in miscstuff.Config.listofregistereddoors)
                 {
-                    if (doorinfo.x == x && doorinfo.y == y && doorinfo.plant == plant && doorinfo.index == index && doorinfo.barricadeRegion == barricadeRegion)
+                    if (doorinfo.x == x && doorinfo.y == y && doorinfo.plant == plant && doorinfo.index == index)
                     {
+                        isregistered = true;
                         if (caller.HasPermission(doorinfo.permission))
                         {
                             //OPEN THE DOOOOOOOR
@@ -71,17 +73,18 @@ namespace Random.miscstuff
                                index,
                                flag
                           });
-                            UnturnedChat.Say(caller, doorinfo.name + " door opened", Color.yellow);
+                            UnturnedChat.Say(caller, doorinfo.name + " door toggled", Color.yellow);
                         }
                         else {
                             UnturnedChat.Say(caller, "You do not have the right permissions to open this door", Color.red);
                         }
                     }
-                    else {
-                        UnturnedChat.Say(caller, "Door not registered", Color.red);
-                    }
+                    
                 }
+                if (isregistered == false){
+                    UnturnedChat.Say(caller, "Door is not registered!", Color.red);
 
+                }
 
 
 

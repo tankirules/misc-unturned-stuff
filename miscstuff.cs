@@ -26,6 +26,7 @@ namespace Random.miscstuff
 
         protected override void Unload()
         {
+            Configuration.Save();
             UnturnedPlayerEvents.OnPlayerUpdateStat -= OnPlayerUpdateStat;
             VehicleManager.onSiphonVehicleRequested -= onVehicleSiphoning;
             Rocket.Core.Logging.Logger.Log("Plugin Unloaded");

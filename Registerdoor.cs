@@ -12,7 +12,6 @@ using Rocket.Core.Logging;
 using SDG.Unturned;
 using UnityEngine;
 using Rocket.API;
-
 using SDG.Framework.Utilities;
 
 namespace Random.miscstuff
@@ -31,20 +30,17 @@ namespace Random.miscstuff
         public void Execute(IRocketPlayer caller, string[] args)
         {
             var PlayerCaller = (UnturnedPlayer)caller;
-            PlayerLook look = PlayerCaller.Player.look;
-            RaycastHit raycastHit;
+            
             // actually get the door you are looking at 
             if (args.Length != 2)
             {
                 UnturnedChat.Say(caller, "Invalid arguments", Color.red);
                 return;
             }
-            if (!PhysicsUtility.raycast(new Ray(look.aim.position, look.aim.forward), out raycastHit, 100, RayMasks.BARRICADE, 0))
-            {
-                UnturnedChat.Say(caller, "Not looking at an object!");
-                return;
-            }
-            InteractableDoorHinge component = raycastHit.transform.GetComponent<InteractableDoorHinge>();
+
+            InteractableDoorHinge component = raycastdoor.Getdoor(PlayerCaller);
+            
+
             if (component != null)
             {
                 var name = args[0];
@@ -65,9 +61,25 @@ namespace Random.miscstuff
                 tempvar.y = y;
                 tempvar.plant = plant;
                 tempvar.index = index;
-                tempvar.barricadeRegion = barricadeRegion;
-                miscstuff.Instance.Configuration.Instance.listofregistereddoors.Add(tempvar);
+                if (miscstuff.Config.listofregistereddoors.Count > 0 ){
+                    foreach (Registereddoortype doorinfo in miscstuff.Config.listofregistereddoors)
+                    {
+                        if (doorinfo.name == tempvar.name) {
+                            UnturnedChat.Say(caller, "A door already exists with that name!", Color.red);
+                            return;
+                        }
+                        if (doorinfo.index == tempvar.index)
+                        {
+                            UnturnedChat.Say(caller, "This door is already registered!", Color.red);
+                            return;
+                        }
+                    }
+                }
                 
+
+                miscstuff.Config.listofregistereddoors.Add(tempvar);
+                UnturnedChat.Say(caller, "Door Registered!", Color.blue);
+                miscstuff.Instance.Configuration.Save();
             }
             else
             {

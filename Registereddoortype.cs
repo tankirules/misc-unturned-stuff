@@ -24,6 +24,5 @@ namespace Random.miscstuff
         public byte y;
         public ushort plant;
         public ushort index;
-        public BarricadeRegion barricadeRegion;
     }
 }

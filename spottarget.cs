@@ -16,7 +16,6 @@ namespace Random.miscstuff
     //spots a target for all players in a vehicle, returns distance and bearing for each individual
     public class spottargetcommand : IRocketCommand
     {
-
         
         public AllowedCaller AllowedCaller => AllowedCaller.Player;
         public string Name => "spottarget";

@@ -74,6 +74,7 @@
     <Compile Include="opendoor.cs" />
     <Compile Include="Registerdoor.cs" />
     <Compile Include="Registereddoortype.cs" />
+    <Compile Include="SaveConfig.cs" />
     <Compile Include="spottarget.cs" />
     <Compile Include="getdistance.cs" />
     <Compile Include="miscstuff.cs" />
