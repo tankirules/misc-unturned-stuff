@@ -61,6 +61,7 @@ namespace Random.miscstuff
                 tempvar.y = y;
                 tempvar.plant = plant;
                 tempvar.index = index;
+                tempvar.doorposition = door.transform.position;
                 if (miscstuff.Config.listofregistereddoors.Count > 0 ){
                     foreach (Registereddoortype doorinfo in miscstuff.Config.listofregistereddoors)
                     {

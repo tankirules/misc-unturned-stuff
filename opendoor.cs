@@ -27,7 +27,7 @@ namespace Random.miscstuff
         public string Syntax => "/opendoor";
         public List<string> Aliases => new List<string>();
         public List<string> Permissions => new List<string> { "opendoor" };
-
+        
         public void Execute(IRocketPlayer caller, string[] args)
         {
             var PlayerCaller = (UnturnedPlayer)caller;

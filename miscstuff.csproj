@@ -71,6 +71,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="changedoorperm.cs" />
     <Compile Include="opendoor.cs" />
     <Compile Include="raycastdoor.cs" />
     <Compile Include="Registerdoor.cs" />
@@ -81,6 +82,7 @@
     <Compile Include="miscstuff.cs" />
     <Compile Include="miscstuffConfiguration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Unregisterdoor.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

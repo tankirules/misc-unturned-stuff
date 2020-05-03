@@ -13,7 +13,6 @@ using SDG.Unturned;
 using UnityEngine;
 using Rocket.API;
 using SDG.Framework.Utilities;
-
 namespace Random.miscstuff
 {
     public class Registereddoortype
@@ -24,5 +23,6 @@ namespace Random.miscstuff
         public byte y;
         public ushort plant;
         public ushort index;
+        public Vector3 doorposition;
     }
 }
