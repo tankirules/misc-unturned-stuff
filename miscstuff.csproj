@@ -72,6 +72,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="changedoorperm.cs" />
+    <Compile Include="customdoorperm.cs" />
+    <Compile Include="getindex.cs" />
     <Compile Include="opendoor.cs" />
     <Compile Include="raycastdoor.cs" />
     <Compile Include="Registerdoor.cs" />

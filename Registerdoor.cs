@@ -61,24 +61,26 @@ namespace Random.miscstuff
                 tempvar.y = y;
                 tempvar.plant = plant;
                 tempvar.index = index;
+                tempvar.steamid = PlayerCaller.CSteamID.ToString();
                 tempvar.doorposition = door.transform.position;
-                if (miscstuff.Config.listofregistereddoors.Count > 0 ){
-                    foreach (Registereddoortype doorinfo in miscstuff.Config.listofregistereddoors)
+                tempvar.ID = door.GetInstanceID();
+                if (miscstuff.Instance.Configuration.Instance.listofregistereddoors.Count > 0 ){
+                    foreach (Registereddoortype doorinfo in miscstuff.Instance.Configuration.Instance.listofregistereddoors)
                     {
                         if (doorinfo.name == tempvar.name) {
                             UnturnedChat.Say(caller, "A door already exists with that name!", Color.red);
                             return;
                         }
-                        if (doorinfo.index == tempvar.index)
+                        else if (doorinfo.index == tempvar.index && doorinfo.x == tempvar.x && doorinfo.y == tempvar.y && doorinfo.ID == tempvar.ID && doorinfo.plant == tempvar.plant)
                         {
-                            UnturnedChat.Say(caller, "This door is already registered!", Color.red);
+                            UnturnedChat.Say(caller, "This door " + doorinfo.name + " is already registered!", Color.red);
                             return;
                         }
                     }
                 }
                 
 
-                miscstuff.Config.listofregistereddoors.Add(tempvar);
+                miscstuff.Instance.Configuration.Instance.listofregistereddoors.Add(tempvar);
                 UnturnedChat.Say(caller, "Door Registered!", Color.blue);
                 miscstuff.Instance.Configuration.Save();
             }

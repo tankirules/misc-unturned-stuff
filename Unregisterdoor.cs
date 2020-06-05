@@ -24,7 +24,7 @@ namespace Random.miscstuff
         public string Help => "Unregisters a door you are looking at or a door by name";
         public string Syntax => "/unregisterdoor or /unregisterdoor doorname";
         public List<string> Aliases => new List<string>();
-        public List<string> Permissions => new List<string> { "unregisterdoor" };
+        public List<string> Permissions => new List<string> { "registerdoor" };
 
         public void Execute(IRocketPlayer caller, string[] args)
         {
@@ -36,13 +36,14 @@ namespace Random.miscstuff
             else if (args.Length == 1)
             {
                 bool isregistered = false;
-                foreach (Registereddoortype doorinfo in miscstuff.Config.listofregistereddoors)
+                foreach (Registereddoortype doorinfo in miscstuff.Instance.Configuration.Instance.listofregistereddoors)
                 {
                     if (doorinfo.name == args[0])
                     {
                         isregistered = true;
-                        miscstuff.Config.listofregistereddoors.Remove(doorinfo);
+                        miscstuff.Instance.Configuration.Instance.listofregistereddoors.Remove(doorinfo);
                         UnturnedChat.Say(caller,"Door" + doorinfo.name + " Unregistered!");
+                        miscstuff.Instance.Configuration.Save();
 
                     }
                 }
@@ -66,14 +67,18 @@ namespace Random.miscstuff
                     BarricadeRegion barricadeRegion;
                     BarricadeManager.tryGetInfo(door.transform, out x, out y, out plant, out index,
                         out barricadeRegion);
+
+                    var ID = door.GetInstanceID(); ;
+                    
                     bool isregistered = false;
-                    foreach (Registereddoortype doorinfo in miscstuff.Config.listofregistereddoors)
+                    foreach (Registereddoortype doorinfo in miscstuff.Instance.Configuration.Instance.listofregistereddoors)
                     {
-                        if (doorinfo.x == x && doorinfo.y == y && doorinfo.plant == plant && doorinfo.index == index)
+                        if (doorinfo.x == x && doorinfo.y == y && doorinfo.plant == plant && doorinfo.index == index && doorinfo.ID == ID)
                         {
                             isregistered = true;
-                            miscstuff.Config.listofregistereddoors.Remove(doorinfo);
+                            miscstuff.Instance.Configuration.Instance.listofregistereddoors.Remove(doorinfo);
                             UnturnedChat.Say(caller, "Door" + doorinfo.name + " Unregistered!");
+                            miscstuff.Instance.Configuration.Save();
                         }
                     }
 

@@ -23,6 +23,8 @@ namespace Random.miscstuff
         public byte y;
         public ushort plant;
         public ushort index;
+        public int ID;
         public Vector3 doorposition;
+        public string steamid;
     }
 }

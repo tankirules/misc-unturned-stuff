@@ -44,9 +44,10 @@ namespace Random.miscstuff
                 ushort index;
                 BarricadeRegion barricadeRegion;
                 BarricadeManager.tryGetInfo(door.transform, out x, out y, out plant, out index, out barricadeRegion);
-                foreach (Registereddoortype doorinfo in miscstuff.Config.listofregistereddoors)
+                var ID = door.GetInstanceID();
+                foreach (Registereddoortype doorinfo in miscstuff.Instance.Configuration.Instance.listofregistereddoors)
                 {
-                    if (doorinfo.x == x && doorinfo.y == y && doorinfo.plant == plant && doorinfo.index == index)
+                    if (doorinfo.x == x && doorinfo.y == y && doorinfo.plant == plant && doorinfo.index == index && doorinfo.ID == ID)
                     {
                         isregistered = true;
                         if (caller.HasPermission(doorinfo.permission))

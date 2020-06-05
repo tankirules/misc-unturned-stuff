@@ -1,4 +1,5 @@
-﻿using Rocket.Core;
+﻿using System.Net.Configuration;
+using Rocket.Core;
 using Rocket.API.Collections;
 using Rocket.Unturned.Events;
 using Rocket.Unturned.Player;
@@ -6,7 +7,10 @@ using Rocket.Unturned.Chat;
 using Rocket.Core.Plugins;
 using Rocket.Core.Logging;
 using SDG.Unturned;
+using Steamworks;
 using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Random.miscstuff
 {
@@ -18,21 +22,80 @@ namespace Random.miscstuff
         {
             UnturnedPlayerEvents.OnPlayerUpdateStat += OnPlayerUpdateStat;
             VehicleManager.onSiphonVehicleRequested += onVehicleSiphoning;
+            BarricadeManager.onTransformRequested += OnTransformRequested;
+            Level.onLevelLoaded += OnLevelLoaded;
             Instance = this;
             Config = Instance.Configuration.Instance;
             Rocket.Core.Logging.Logger.Log("Plugin Loaded");
-
+            
         }
+        
 
         protected override void Unload()
         {
-            Configuration.Save();
+            
             UnturnedPlayerEvents.OnPlayerUpdateStat -= OnPlayerUpdateStat;
             VehicleManager.onSiphonVehicleRequested -= onVehicleSiphoning;
+            BarricadeManager.onTransformRequested -= OnTransformRequested;
+            Level.onLevelLoaded -= OnLevelLoaded;
+
+            var barricades = GetBarricades(CSteamID.Nil, false);
+            foreach (BarricadeData barricade in barricades)
+            {
+                foreach (Registereddoortype registereddoor in Configuration.Instance.listofregistereddoors)
+                {
+                    if (registereddoor.ID == (int) barricade.instanceID)
+                    {
+                        registereddoor.doorposition = barricade.point;
+                    }
+                }
+            }
+            Configuration.Save();
             Rocket.Core.Logging.Logger.Log("Plugin Unloaded");
         }
 
+        public void OnLevelLoaded(int signature)
+        {
+            var barricades = GetBarricades(CSteamID.Nil, false);
+            foreach (BarricadeData barricade in barricades)
+            {
+                foreach (Registereddoortype registereddoor in Configuration.Instance.listofregistereddoors)
+                {
+                    if (registereddoor.doorposition == barricade.point)
+                    {
+                        registereddoor.ID = (int)barricade.instanceID;
+                        Rocket.Core.Logging.Logger.Log("Changed door " + registereddoor.name + " to instance ID " + barricade.instanceID);
+                    }
+                }
+            }
+            Configuration.Save();
+        }
 
+
+
+
+
+
+        public static IEnumerable<BarricadeData> GetBarricades(CSteamID id, bool includePlants)
+        {
+            var result = BarricadeManager.regions.Cast<BarricadeRegion>().SelectMany(brd => brd.barricades).ToList();
+
+            if (includePlants)
+                result.AddRange(BarricadeManager.plants.SelectMany(region => region.barricades));
+
+            return id == CSteamID.Nil ? result : result.Where(k => k.owner == (ulong)id);
+        }
+
+        public void OnTransformRequested(CSteamID instigator, byte x, byte y, ushort plant, uint instanceID,ref Vector3 point, ref byte angle_x,ref byte angle_y, ref byte angle_z, ref bool shouldAllow)
+        {
+            foreach (Registereddoortype door in Config.listofregistereddoors)
+            {
+                if (door.ID == instanceID)
+                {
+                    door.doorposition = point;
+                }
+            }
+        }
 
         public void OnPlayerUpdateStat(UnturnedPlayer player, EPlayerStat stat)
         {
