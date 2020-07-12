@@ -65,15 +65,16 @@ namespace Random.miscstuff
                     ushort plant;
                     ushort index;
                     BarricadeRegion barricadeRegion;
-                    BarricadeManager.tryGetInfo(door.transform, out x, out y, out plant, out index,
-                        out barricadeRegion);
+                    BarricadeManager.tryGetInfo(door.transform, out x, out y, out plant, out index, out barricadeRegion);
+                    BarricadeDrop barricadedrop = barricadeRegion.drops[index];
+                    var ID = barricadedrop.instanceID;
 
-                    var ID = door.GetInstanceID(); ;
-                    
+
+
                     bool isregistered = false;
                     foreach (Registereddoortype doorinfo in miscstuff.Instance.Configuration.Instance.listofregistereddoors)
                     {
-                        if (doorinfo.x == x && doorinfo.y == y && doorinfo.plant == plant && doorinfo.index == index && doorinfo.ID == ID)
+                        if (doorinfo.ID == ID)
                         {
                             isregistered = true;
                             miscstuff.Instance.Configuration.Instance.listofregistereddoors.Remove(doorinfo);

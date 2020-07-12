@@ -31,8 +31,9 @@ namespace Random.miscstuff
         public void Execute(IRocketPlayer caller, string[] args)
         {
             var PlayerCaller = (UnturnedPlayer)caller;
-           
+
             InteractableDoorHinge component = raycastdoor.Getdoor(PlayerCaller);
+
             if (component != null)
             {
                 bool isregistered = false;
@@ -44,15 +45,18 @@ namespace Random.miscstuff
                 ushort index;
                 BarricadeRegion barricadeRegion;
                 BarricadeManager.tryGetInfo(door.transform, out x, out y, out plant, out index, out barricadeRegion);
-                var ID = door.GetInstanceID();
+                BarricadeDrop barricadedrop = barricadeRegion.drops[index];
+                var ID = barricadedrop.instanceID;
                 foreach (Registereddoortype doorinfo in miscstuff.Instance.Configuration.Instance.listofregistereddoors)
                 {
-                    if (doorinfo.x == x && doorinfo.y == y && doorinfo.plant == plant && doorinfo.index == index && doorinfo.ID == ID)
+                    if (doorinfo.ID == ID)
                     {
                         isregistered = true;
                         if (caller.HasPermission(doorinfo.permission))
+
                         {
                             //OPEN THE DOOOOOOOR
+                            Rocket.Core.Logging.Logger.Log("Player has perm: " + doorinfo.permission);
                             SteamCaller steamCaller = (BarricadeManager)typeof(BarricadeManager).GetField("manager", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
                             door.updateToggle(flag);
                             steamCaller.channel.send("tellToggleDoor", ESteamCall.ALL, ESteamPacket.UPDATE_RELIABLE_BUFFER, new object[]
@@ -63,6 +67,7 @@ namespace Random.miscstuff
                                index,
                                flag
                           });
+                            Rocket.Core.Logging.Logger.Log("Player toggled door " + doorinfo.ID);
                             UnturnedChat.Say(caller, doorinfo.name + " door toggled", Color.yellow);
                         }
                         else {

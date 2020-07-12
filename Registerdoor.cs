@@ -37,33 +37,29 @@ namespace Random.miscstuff
                 UnturnedChat.Say(caller, "Invalid arguments", Color.red);
                 return;
             }
-
             InteractableDoorHinge component = raycastdoor.Getdoor(PlayerCaller);
-            
 
             if (component != null)
             {
                 var name = args[0];
                 var permissionname = args[1];
                 InteractableDoor door = component.door;
-                bool flag = !door.isOpen;
                 byte x;
                 byte y;
                 ushort plant;
                 ushort index;
+                
                 BarricadeRegion barricadeRegion;
                 BarricadeManager.tryGetInfo(door.transform, out x, out y, out plant, out index, out barricadeRegion);
                 var permission = "Registereddoor." + permissionname;
                 Registereddoortype tempvar = new Registereddoortype();
                 tempvar.name = name;
                 tempvar.permission = permission;
-                tempvar.x = x;
-                tempvar.y = y;
-                tempvar.plant = plant;
-                tempvar.index = index;
                 tempvar.steamid = PlayerCaller.CSteamID.ToString();
                 tempvar.doorposition = door.transform.position;
-                tempvar.ID = door.GetInstanceID();
+                BarricadeDrop barricadedrop = barricadeRegion.drops[index];
+                var ID = barricadedrop.instanceID;
+                tempvar.ID = ID;
                 if (miscstuff.Instance.Configuration.Instance.listofregistereddoors.Count > 0 ){
                     foreach (Registereddoortype doorinfo in miscstuff.Instance.Configuration.Instance.listofregistereddoors)
                     {
@@ -71,7 +67,7 @@ namespace Random.miscstuff
                             UnturnedChat.Say(caller, "A door already exists with that name!", Color.red);
                             return;
                         }
-                        else if (doorinfo.index == tempvar.index && doorinfo.x == tempvar.x && doorinfo.y == tempvar.y && doorinfo.ID == tempvar.ID && doorinfo.plant == tempvar.plant)
+                        else if (doorinfo.ID == ID)
                         {
                             UnturnedChat.Say(caller, "This door " + doorinfo.name + " is already registered!", Color.red);
                             return;
@@ -87,6 +83,7 @@ namespace Random.miscstuff
             else
             {
                 UnturnedChat.Say(caller, "Not looking at a door!");
+                return;
             }
         }
 

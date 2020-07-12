@@ -37,9 +37,11 @@ namespace Random.miscstuff
                 byte y;
                 ushort plant;
                 ushort index;
-                var ID = door.GetInstanceID();
+                
                 BarricadeRegion barricadeRegion;
                 BarricadeManager.tryGetInfo(door.transform, out x, out y, out plant, out index, out barricadeRegion);
+                BarricadeDrop barricadedrop = barricadeRegion.drops[index];
+                var ID = barricadedrop.instanceID;
                 UnturnedChat.Say(caller,"Index of this door is: " + index);
                 UnturnedChat.Say(caller, "Instance ID of this door is:" + ID);
                 return;

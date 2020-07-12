@@ -44,7 +44,7 @@ namespace Random.miscstuff
             {
                 foreach (Registereddoortype registereddoor in Configuration.Instance.listofregistereddoors)
                 {
-                    if (registereddoor.ID == (int) barricade.instanceID)
+                    if (registereddoor.ID == barricade.instanceID)
                     {
                         registereddoor.doorposition = barricade.point;
                     }
@@ -63,7 +63,7 @@ namespace Random.miscstuff
                 {
                     if (registereddoor.doorposition == barricade.point)
                     {
-                        registereddoor.ID = (int)barricade.instanceID;
+                        registereddoor.ID = barricade.instanceID;
                         Rocket.Core.Logging.Logger.Log("Changed door " + registereddoor.name + " to instance ID " + barricade.instanceID);
                     }
                 }

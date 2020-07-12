@@ -19,11 +19,7 @@ namespace Random.miscstuff
     {
         public string name;
         public string permission;
-        public byte x;
-        public byte y;
-        public ushort plant;
-        public ushort index;
-        public int ID;
+        public uint ID;
         public Vector3 doorposition;
         public string steamid;
     }
