@@ -1,6 +1,7 @@
-﻿using System.Net.Configuration;
+﻿using System;
+using System.Net.Configuration;
 using Rocket.Core;
-using Rocket.API.Collections;
+using Rocket.API;
 using Rocket.Unturned.Events;
 using Rocket.Unturned.Player;
 using Rocket.Unturned.Chat;
@@ -27,7 +28,7 @@ namespace Random.miscstuff
             Instance = this;
             Config = Instance.Configuration.Instance;
             Rocket.Core.Logging.Logger.Log("Plugin Loaded");
-            
+            BarricadeManager.onDamageBarricadeRequested += OnDamageBarricade;
         }
         
 
@@ -38,6 +39,7 @@ namespace Random.miscstuff
             VehicleManager.onSiphonVehicleRequested -= onVehicleSiphoning;
             BarricadeManager.onTransformRequested -= OnTransformRequested;
             Level.onLevelLoaded -= OnLevelLoaded;
+            BarricadeManager.onDamageBarricadeRequested -= OnDamageBarricade;
 
             var barricades = GetBarricades(CSteamID.Nil, false);
             foreach (BarricadeData barricade in barricades)
@@ -52,6 +54,52 @@ namespace Random.miscstuff
             }
             Configuration.Save();
             Rocket.Core.Logging.Logger.Log("Plugin Unloaded");
+        }
+
+        
+        public void OnDamageBarricade(CSteamID steamid, Transform barricade,ref ushort barricadeushort, ref bool barricadebool, EDamageOrigin damageorigin)
+        {
+            byte x;
+            byte y;
+            ushort num;
+            ushort index;
+            BarricadeRegion barricadeRegion;
+            BarricadeManager.tryGetInfo(barricade, out x, out y, out num, out index, out barricadeRegion);
+            Rocket.Core.Logging.Logger.Log("Barricade damaged");
+            
+                var player = UnturnedPlayer.FromCSteamID(steamid);
+                var steam64 = steamid;
+                BarricadeData barricadetargeted = barricadeRegion.barricades[index];
+                var itemid = barricadetargeted.barricade.id;
+                ItemAsset itemAsset = (from i in new List<ItemAsset>(Assets.find(EAssetType.ITEM).Cast<ItemAsset>())
+                    where i.itemName != null
+                    orderby i.itemName.Length
+                    where i.id == itemid
+                    select i).FirstOrDefault<ItemAsset>();
+                //stole this from rockets /i command
+                var barricadename = itemAsset.itemName;
+                var url = player.SteamProfile.AvatarFull.ToString();
+                var bx = barricadetargeted.point.x;
+                var by = barricadetargeted.point.y;
+                var bz = barricadetargeted.point.z;
+                //and then send to discord webhook
+                Discord.SendWebhookPost(Configuration.Instance.raidalertchannel,
+                    Discord.BuildDiscordEmbed("A barricade was damaged", "This barricade was damaged at " + DateTime.Now,
+                        player.DisplayName, url, 16711680, new object[]
+                        {
+                            Discord.BuildDiscordField("Player steam64", steam64.ToString(), true),
+                            Discord.BuildDiscordField("Barricade ID", itemid.ToString(), true),
+                            Discord.BuildDiscordField("Barricade Name", barricadename, true),
+                            Discord.BuildDiscordField("Barricade Position", "X: " + bx + " Y: " + by + " Z: " + bz,
+                            true)
+
+            }));
+
+
+
+            
+
+            
         }
 
         public void OnLevelLoaded(int signature)

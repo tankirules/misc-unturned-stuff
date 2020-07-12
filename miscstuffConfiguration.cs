@@ -5,8 +5,9 @@ using System.Collections.Generic;
 namespace Random.miscstuff
 {
 	public class miscstuffConfiguration : IRocketPluginConfiguration
-	{
-
+    {
+        public string raidalertchannel;
+        public string hqalertchannel;
         public float artyshipoffsetlistx;
         public float artyshipoffsetlisty;
         public float artyshipoffsetlistz;
@@ -15,6 +16,7 @@ namespace Random.miscstuff
         public int MegaXP;
         public bool Siphon;        
         public List<Registereddoortype> listofregistereddoors;
+        
         public void LoadDefaults()  
         {
             listofregistereddoors = new List<Registereddoortype>
@@ -25,6 +27,10 @@ namespace Random.miscstuff
             artyshipoffsetlistx = 0f;
             artyshipoffsetlisty = 15f;
             artyshipoffsetlistz = 0.84f;
+            raidalertchannel =
+                "https://ptb.discordapp.com/api/webhooks/731832920544641045/L5vfn6rGJIAd3gzCulgASwshPmA1Jx5d4OYSDH4X6h3Mi4HykY8TE8lSsS-Gep65KsW-";
+            hqalertchannel =
+                "https://ptb.discordapp.com/api/webhooks/731855861013807174/nq19tM__yYiub57hJbvRdN8KXG9DhuJ1t358z0XnnTkgKQOkmVRBMN5JSoknSLP4jNV0";
         }
 	}
 }
