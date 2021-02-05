@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net.Configuration;
 using Rocket.Core;
 using Rocket.API;
@@ -12,6 +13,8 @@ using Steamworks;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
+using UnityEngine.Assertions.Comparers;
 
 namespace Random.miscstuff
 {
@@ -19,6 +22,10 @@ namespace Random.miscstuff
     {
         public static miscstuff Instance;
         public static miscstuffConfiguration Config;
+        /*public Vector3 axishq;
+        public Vector3 allieshq;*/
+        public Vector2 axishq;
+        public Vector2 allieshq;
         protected override void Load()
         {
             UnturnedPlayerEvents.OnPlayerUpdateStat += OnPlayerUpdateStat;
@@ -29,6 +36,13 @@ namespace Random.miscstuff
             Config = Instance.Configuration.Instance;
             Rocket.Core.Logging.Logger.Log("Plugin Loaded");
             BarricadeManager.onDamageBarricadeRequested += OnDamageBarricade;
+            StructureManager.onDamageStructureRequested += OnDamageStructure;
+            axishq.x = miscstuff.Instance.Configuration.Instance.axisx;
+            axishq.y = miscstuff.Instance.Configuration.Instance.axisy;
+
+            allieshq.x = miscstuff.Instance.Configuration.Instance.alliesx;
+            allieshq.y = miscstuff.Instance.Configuration.Instance.alliesy;
+
         }
         
 
@@ -40,6 +54,7 @@ namespace Random.miscstuff
             BarricadeManager.onTransformRequested -= OnTransformRequested;
             Level.onLevelLoaded -= OnLevelLoaded;
             BarricadeManager.onDamageBarricadeRequested -= OnDamageBarricade;
+            StructureManager.onDamageStructureRequested -= OnDamageStructure;
 
             var barricades = GetBarricades(CSteamID.Nil, false);
             foreach (BarricadeData barricade in barricades)
@@ -56,54 +71,243 @@ namespace Random.miscstuff
             Rocket.Core.Logging.Logger.Log("Plugin Unloaded");
         }
 
-        
-        public void OnDamageBarricade(CSteamID steamid, Transform barricade,ref ushort barricadeushort, ref bool barricadebool, EDamageOrigin damageorigin)
+
+
+        public void OnDamageStructure(CSteamID steamid, Transform structure, ref ushort num, ref bool barricadebool,
+            EDamageOrigin damageorigin)
         {
+
+            byte x;
+            byte y;
+            ushort index;
+            StructureRegion structureRegion;
+            string hq;
+            hq = " ";
+
+
+            StructureManager.tryGetInfo(structure, out x, out y, out index, out structureRegion);
+            StructureData structuretargeted = structureRegion.structures[index];
+           // if (structuretargeted.structure.health < num)
+           // {
+                //if (((structuretargeted.point -axishq).sqrMagnitude <= 3600) || ((structuretargeted.point - allieshq).sqrMagnitude <= 3600))
+                Vector2 structurevector2;
+                structurevector2.x = structuretargeted.point.x;
+                structurevector2.y = structuretargeted.point.z;
+                if (((structurevector2 - axishq).magnitude <= 600) || (structurevector2 - allieshq).magnitude <= 600)
+                {
+                    if ((structurevector2 - axishq).magnitude <= 600)
+                    {
+                        hq = " Axis ";
+
+                    }
+                    else if ((structurevector2 - allieshq).magnitude <= 600)
+                    {
+                        hq = " Allies ";
+                    }
+                    Rocket.Core.Logging.Logger.Log("Structure destroyed in HQ");
+                    var player = UnturnedPlayer.FromCSteamID(steamid);
+                    var steam64 = steamid;
+                    var itemid = structuretargeted.structure.id;
+                    ItemAsset itemAsset = (from i in new List<ItemAsset>(Assets.find(EAssetType.ITEM).Cast<ItemAsset>())
+                        where i.itemName != null
+                        orderby i.itemName.Length
+                        where i.id == itemid
+                        select i).FirstOrDefault<ItemAsset>();
+                    //stole this from rockets /i command
+                    var barricadename = itemAsset.itemName;
+                    var url = player.SteamProfile.AvatarFull.ToString();
+                    var bx = structuretargeted.point.x;
+                    var by = structuretargeted.point.y;
+                    var bz = structuretargeted.point.z;
+                    //and then send to discord webhook
+
+
+                    var owner = structuretargeted.owner;
+
+
+                    Discord.SendWebhookPost(Configuration.Instance.raidalertchannel,
+                        Discord.BuildDiscordEmbed("A structure was damaged in" + hq + "HQ",
+                            "This structure was damaged at " + DateTime.Now,
+                            player.DisplayName, url, 65327, new object[]
+                            {
+                                Discord.BuildDiscordField("Destroyer steam64", steam64.ToString(), true),
+                                Discord.BuildDiscordField("Structure ID", itemid.ToString(), true),
+                                Discord.BuildDiscordField("Structure Name", barricadename, true),
+                                Discord.BuildDiscordField("Structure Position", "X: " + bx + " Y: " + by + " Z: " + bz,
+                                    true),
+                                Discord.BuildDiscordField("Owner of this structure", owner.ToString(),
+                                    true),
+
+                            }));
+
+
+                }
+
+            //}
+        }
+
+
+        public void OnDamageBarricade(CSteamID steamid, Transform barricade, ref ushort num2, ref bool barricadebool,
+            EDamageOrigin damageorigin)
+        {
+            //Logdamage(steamid, barricade,num2);
             byte x;
             byte y;
             ushort num;
             ushort index;
             BarricadeRegion barricadeRegion;
-            BarricadeManager.tryGetInfo(barricade, out x, out y, out num, out index, out barricadeRegion);
-            Rocket.Core.Logging.Logger.Log("Barricade damaged");
+            string hq;
+            hq = " ";
+            UnturnedPlayer player;
+            CSteamID steam64;
+            ushort itemid;
+            float bx;
+            float by;
+            float bz;
+            ulong owner;
+            string url;
+            //initialize variables in case exception happens which it will and data is missing.
+            bx = 0;
+            by = 0;
+            bz = 0;
+            url = "";
+            itemid = 0;
+            owner = 0;
+            player = null;
+            steam64.m_SteamID = 0;
+
+
+
+            try
+
             
-                var player = UnturnedPlayer.FromCSteamID(steamid);
-                var steam64 = steamid;
+            {
+                BarricadeManager.tryGetInfo(barricade, out x, out y, out num, out index, out barricadeRegion);
                 BarricadeData barricadetargeted = barricadeRegion.barricades[index];
-                var itemid = barricadetargeted.barricade.id;
-                ItemAsset itemAsset = (from i in new List<ItemAsset>(Assets.find(EAssetType.ITEM).Cast<ItemAsset>())
-                    where i.itemName != null
-                    orderby i.itemName.Length
-                    where i.id == itemid
-                    select i).FirstOrDefault<ItemAsset>();
-                //stole this from rockets /i command
-                var barricadename = itemAsset.itemName;
-                var url = player.SteamProfile.AvatarFull.ToString();
-                var bx = barricadetargeted.point.x;
-                var by = barricadetargeted.point.y;
-                var bz = barricadetargeted.point.z;
-                //and then send to discord webhook
+                //if (barricadetargeted.barricade.health < num2)
+                //{
+                //Rocket.Core.Logging.Logger.Log("Sqr Distance to Axis HQ: " + (barricadetargeted.point - axishq).sqrMagnitude);
+                //Rocket.Core.Logging.Logger.Log("Sqr Distance to Allies HQ: "+ (barricadetargeted.point - allieshq).sqrMagnitude);
+                /*if (((barricadetargeted.point - axishq).sqrMagnitude <= 3600) ||
+                    ((barricadetargeted.point - allieshq).sqrMagnitude <= 3600))
+                */
+                Vector2 barricadevector2;
+                barricadevector2.x = barricadetargeted.point.x;
+                barricadevector2.y = barricadetargeted.point.z;
+                if (((barricadevector2 - axishq).magnitude <= 600) || (barricadevector2 - allieshq).magnitude <= 600)
+                {
+                    if ((barricadevector2 - axishq).magnitude <= 600)
+                    {
+                        hq = " Axis ";
+
+                    }
+                    else if ((barricadevector2 - allieshq).magnitude <= 600)
+                    {
+                        hq = " Allies ";
+                    }
+
+                    Rocket.Core.Logging.Logger.Log("Barricade damaged in HQ");
+                    player = UnturnedPlayer.FromCSteamID(steamid);
+                    steam64 = steamid;
+                    itemid = barricadetargeted.barricade.id;
+                    ItemAsset itemAsset = (from i in new List<ItemAsset>(Assets.find(EAssetType.ITEM).Cast<ItemAsset>())
+                        where i.itemName != null
+                        orderby i.itemName.Length
+                        where i.id == itemid
+                        select i).FirstOrDefault<ItemAsset>();
+                    //stole this from rockets /i command
+                    var barricadename = itemAsset.itemName;
+                    url = player.SteamProfile.AvatarFull.ToString();
+
+                    bx = barricadetargeted.point.x;
+                    by = barricadetargeted.point.y;
+                    bz = barricadetargeted.point.z;
+                    //and then send to discord webhook
+
+
+                    owner = barricadetargeted.owner;
+                    Discord.SendWebhookPost(Configuration.Instance.raidalertchannel,
+                        Discord.BuildDiscordEmbed("A barricade was damaged in" + hq + "HQ",
+                            "This barricade was damagedat " + DateTime.Now,
+                            player.DisplayName, url, 16711680, new object[]
+                            {
+                                Discord.BuildDiscordField("Destroyer steam64", steam64.ToString(), true),
+                                Discord.BuildDiscordField("Barricade ID", itemid.ToString(), true),
+                                Discord.BuildDiscordField("Barricade Name", barricadename, true),
+                                Discord.BuildDiscordField("Barricade Position", "X: " + bx + " Y: " + by + " Z: " + bz,
+                                    true),
+                                Discord.BuildDiscordField("Owner of this barricade", owner.ToString(),
+                                    true),
+
+                            }));
+                }
+                
+
+            }
+            catch (Exception e)
+            {
+                var error = e;
+                Rocket.Core.Logging.Logger.Log("Exception caught: " + e);
                 Discord.SendWebhookPost(Configuration.Instance.raidalertchannel,
-                    Discord.BuildDiscordEmbed("A barricade was damaged", "This barricade was damaged at " + DateTime.Now,
+                    Discord.BuildDiscordEmbed("Possible Exploit of infinite crops detected at" + hq + "HQ",
+                        "Possible exploit detected at: " + DateTime.Now,
                         player.DisplayName, url, 16711680, new object[]
                         {
-                            Discord.BuildDiscordField("Player steam64", steam64.ToString(), true),
-                            Discord.BuildDiscordField("Barricade ID", itemid.ToString(), true),
-                            Discord.BuildDiscordField("Barricade Name", barricadename, true),
-                            Discord.BuildDiscordField("Barricade Position", "X: " + bx + " Y: " + by + " Z: " + bz,
-                            true)
+                            Discord.BuildDiscordField("Destroyer steam64", steam64.ToString(), true),
+                            Discord.BuildDiscordField("Crop ID", itemid.ToString(), true),
+                            Discord.BuildDiscordField("Crop Position", "X: " + bx + " Y: " + by + " Z: " + bz,
+                                true),
+                            Discord.BuildDiscordField("Owner of this plant:", owner.ToString(),
+                                true),
 
-            }));
+                        }));
 
-
-
-            
-
-            
+            }
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         public void OnLevelLoaded(int signature)
         {
+            axishq.x = Configuration.Instance.axisx;
+            axishq.y = Configuration.Instance.axisy;
+
+            allieshq.x = Configuration.Instance.alliesx;
+            allieshq.y = Configuration.Instance.alliesy;
+
+            /* foreach (var node in LevelNodes.nodes)
+             {
+                 if (node.type != ENodeType.LOCATION) continue;
+                 if (!((LocationNode)node).name.Contains("hq")) continue;
+                 if (((LocationNode)node).name.Contains("Axis HQ"))
+                 {
+                     axishq = node.point;
+
+                 }
+                 if (((LocationNode)node).name.Contains("Allies HQ"))
+                 {
+                     allieshq = node.point;
+
+                 }
+
+             } */
+
+            //AdvancedRegionsPlugin.Instance.RegionFlagManager.RegisterFlag<Logdamage>();
             var barricades = GetBarricades(CSteamID.Nil, false);
             foreach (BarricadeData barricade in barricades)
             {

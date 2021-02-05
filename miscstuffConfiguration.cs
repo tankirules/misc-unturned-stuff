@@ -6,19 +6,28 @@ namespace Random.miscstuff
 {
 	public class miscstuffConfiguration : IRocketPluginConfiguration
     {
+        public float axisy;
+        public float axisx;
+        public float alliesy;
+        public float alliesx;
         public string raidalertchannel;
         public string hqalertchannel;
         public float artyshipoffsetlistx;
         public float artyshipoffsetlisty;
         public float artyshipoffsetlistz;
+        
 
         public int ZombieXP;
         public int MegaXP;
         public bool Siphon;        
         public List<Registereddoortype> listofregistereddoors;
         
-        public void LoadDefaults()  
+        public void LoadDefaults()
         {
+            alliesy = 1003;
+            alliesx = 1666;
+            axisx = -1482;
+            axisy = -1684;
             listofregistereddoors = new List<Registereddoortype>
             { };
             ZombieXP = 0;
