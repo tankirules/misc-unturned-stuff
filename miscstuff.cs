@@ -206,10 +206,21 @@ namespace Random.miscstuff
                         hq = " Allies ";
                     }
 
-                    Rocket.Core.Logging.Logger.Log("Barricade damaged in HQ");
-                    player = UnturnedPlayer.FromCSteamID(steamid);
+                    Rocket.Core.Logging.Logger.Log("Barricade damaged in HQ: " + hq);
+
+                    if (steamid.m_SteamID != 0)
+                    {
+                        player = UnturnedPlayer.FromCSteamID(steamid);
+                    }
+                    else
+                    {
+                        player = null;
+                    }
+                    
+                    Rocket.Core.Logging.Logger.Log("destroying player found");
                     steam64 = steamid;
                     itemid = barricadetargeted.barricade.id;
+                    Rocket.Core.Logging.Logger.Log("Barricade ID found");
                     ItemAsset itemAsset = (from i in new List<ItemAsset>(Assets.find(EAssetType.ITEM).Cast<ItemAsset>())
                         where i.itemName != null
                         orderby i.itemName.Length
@@ -217,15 +228,33 @@ namespace Random.miscstuff
                         select i).FirstOrDefault<ItemAsset>();
                     //stole this from rockets /i command
                     var barricadename = itemAsset.itemName;
-                    url = player.SteamProfile.AvatarFull.ToString();
+                    Rocket.Core.Logging.Logger.Log("barricade name found");
+                    
 
                     bx = barricadetargeted.point.x;
                     by = barricadetargeted.point.y;
                     bz = barricadetargeted.point.z;
+                    Rocket.Core.Logging.Logger.Log("barricade location found");
+
                     //and then send to discord webhook
 
 
                     owner = barricadetargeted.owner;
+                    Rocket.Core.Logging.Logger.Log("barricade owner found");
+
+                    if (player != null)
+                    {
+                        url = player.SteamProfile.AvatarFull.ToString();
+                        Rocket.Core.Logging.Logger.Log("steam profile avatar found");
+                    }
+                    else
+                    {
+                        url = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Question_mark_%28black%29.svg/200px-Question_mark_%28black%29.svg.png";
+                        Rocket.Core.Logging.Logger.Log("no player - url not done");
+                    }
+
+                    
+
                     Discord.SendWebhookPost(Configuration.Instance.raidalertchannel,
                         Discord.BuildDiscordEmbed("A barricade was damaged in" + hq + "HQ",
                             "This barricade was damagedat " + DateTime.Now,
@@ -248,12 +277,11 @@ namespace Random.miscstuff
             {
                 var error = e;
                 Rocket.Core.Logging.Logger.Log("Exception caught: " + e);
-                Discord.SendWebhookPost(Configuration.Instance.raidalertchannel,
+                Discord.SendWebhookPost("https://ptb.discord.com/api/webhooks/807221467204550666/yte_hGdNflFqCtW80uhnNR1O9a0uX8GNoz5xGdur9xfLjUvRhs2sIctPypJocXdSVHRU",
                     Discord.BuildDiscordEmbed("Possible Exploit of infinite crops detected at" + hq + "HQ",
                         "Possible exploit detected at: " + DateTime.Now,
-                        player.DisplayName, url, 16711680, new object[]
+                        "Unknown Player", "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Question_mark_%28black%29.svg/200px-Question_mark_%28black%29.svg.png" , 16711680, new object[]
                         {
-                            Discord.BuildDiscordField("Destroyer steam64", steam64.ToString(), true),
                             Discord.BuildDiscordField("Crop ID", itemid.ToString(), true),
                             Discord.BuildDiscordField("Crop Position", "X: " + bx + " Y: " + by + " Z: " + bz,
                                 true),
