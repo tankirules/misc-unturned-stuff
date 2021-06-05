@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.IO;
 using System.Net.Configuration;
 using Rocket.Core;
@@ -14,6 +15,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
+using Rocket.Core.Commands;
 using UnityEngine.Assertions.Comparers;
 
 namespace Random.miscstuff
@@ -42,7 +44,11 @@ namespace Random.miscstuff
 
             allieshq.x = miscstuff.Instance.Configuration.Instance.alliesx;
             allieshq.y = miscstuff.Instance.Configuration.Instance.alliesy;
+            R.Commands.OnExecuteCommand += OnExecuteCommand;
 
+
+            //BarricadeManager.onDeployBarricadeRequested += onBarricadeDeploy;
+            // a barricade isn't spawned at all when vehicle barricade is used
         }
         
 
@@ -56,6 +62,8 @@ namespace Random.miscstuff
             BarricadeManager.onDamageBarricadeRequested -= OnDamageBarricade;
             StructureManager.onDamageStructureRequested -= OnDamageStructure;
 
+            R.Commands.OnExecuteCommand -= OnExecuteCommand;
+
             var barricades = GetBarricades(CSteamID.Nil, false);
             foreach (BarricadeData barricade in barricades)
             {
@@ -67,10 +75,82 @@ namespace Random.miscstuff
                     }
                 }
             }
+           // BarricadeManager.onDeployBarricadeRequested -= onBarricadeDeploy;
             Configuration.Save();
             Rocket.Core.Logging.Logger.Log("Plugin Unloaded");
+
         }
 
+        /*public void onBarricadeDeploy(Barricade barricade, ItemBarricadeAsset asset, Transform hit, ref Vector3 point,
+            ref float angle_x, ref float angle_y, ref float angle_z, ref ulong owner, ref ulong group,
+            ref bool shouldAllow)
+        {
+            Rocket.Core.Logging.Logger.Log("event triggered onBarricadeDeploy");
+            if (UnturnedPlayer.FromCSteamID(new CSteamID(owner)) == null)
+            {
+                Rocket.Core.Logging.Logger.Log("Null owner");
+                return;
+            }
+
+            //check if they are in hq
+            if (UnturnedPlayer.FromCSteamID(new CSteamID(owner)).HasPermission("advancedzones.override.equip.wholemap"))
+            {
+                Rocket.Core.Logging.Logger.Log("Player has the right permissions to place");
+                return;
+            }
+
+            foreach (var id in miscstuff.Instance.Configuration.Instance.listofblacklistedspawners)
+            {
+                if (barricade.id == id)
+                {
+                    shouldAllow = false;
+                    Rocket.Core.Logging.Logger.Log("Not allowed barricade: " + id.ToString());
+                    return;
+                }
+            }
+
+        }*/
+
+        void OnExecuteCommand(IRocketPlayer player,
+            IRocketCommand command, ref bool cancel)
+        {
+            
+            if (command.Name == "home")
+            {
+                var uplayer = (UnturnedPlayer)player;
+                Rocket.Core.Logging.Logger.Log("ItemID equipped: " + uplayer.Player.equipment.itemID.ToString());
+
+                IEnumerator waitpls()
+                {
+                    yield return new WaitForSeconds(5);
+                    //my code here after 5 seconds
+                    if (uplayer.Player.equipment.isEquipped == true)
+                    {
+                        uplayer.Player.equipment.dequip();
+                        //UnturnedChat.Say(uplayer, "Nice try! Unequipped!");
+                    }
+
+                    
+                }
+                StartCoroutine(waitpls());
+
+                //server returns 0 for equipped thingy
+                /*foreach (var id in miscstuff.Instance.Configuration.Instance.listofblacklistedspawners)
+                {
+                    if (uplayer.Player.equipment.itemID == id)
+                    {
+                        
+
+                        
+
+
+                    }
+                }*/
+
+                
+            }
+
+        }
 
 
         public void OnDamageStructure(CSteamID steamid, Transform structure, ref ushort num, ref bool barricadebool,
@@ -166,6 +246,7 @@ namespace Random.miscstuff
             float bz;
             ulong owner;
             string url;
+            string barricadename;
             //initialize variables in case exception happens which it will and data is missing.
             bx = 0;
             by = 0;
@@ -175,7 +256,7 @@ namespace Random.miscstuff
             owner = 0;
             player = null;
             steam64.m_SteamID = 0;
-
+            barricadename = " Unknown";
 
 
             try
@@ -194,14 +275,14 @@ namespace Random.miscstuff
                 Vector2 barricadevector2;
                 barricadevector2.x = barricadetargeted.point.x;
                 barricadevector2.y = barricadetargeted.point.z;
-                if (((barricadevector2 - axishq).magnitude <= 600) || (barricadevector2 - allieshq).magnitude <= 600)
+                if (((barricadevector2 - axishq).magnitude <= 500) || (barricadevector2 - allieshq).magnitude <= 500)
                 {
-                    if ((barricadevector2 - axishq).magnitude <= 600)
+                    if ((barricadevector2 - axishq).magnitude <= 500)
                     {
                         hq = " Axis ";
 
                     }
-                    else if ((barricadevector2 - allieshq).magnitude <= 600)
+                    else if ((barricadevector2 - allieshq).magnitude <= 500)
                     {
                         hq = " Allies ";
                     }
@@ -217,9 +298,9 @@ namespace Random.miscstuff
                         player = null;
                     }
                     
-                    Rocket.Core.Logging.Logger.Log("destroying player found");
+                  //  Rocket.Core.Logging.Logger.Log("destroying player found");
                     steam64 = steamid;
-                    itemid = barricadetargeted.barricade.id;
+                  //  itemid = barricadetargeted.barricade.id;
                     Rocket.Core.Logging.Logger.Log("Barricade ID found");
                     ItemAsset itemAsset = (from i in new List<ItemAsset>(Assets.find(EAssetType.ITEM).Cast<ItemAsset>())
                         where i.itemName != null
@@ -227,30 +308,30 @@ namespace Random.miscstuff
                         where i.id == itemid
                         select i).FirstOrDefault<ItemAsset>();
                     //stole this from rockets /i command
-                    var barricadename = itemAsset.itemName;
-                    Rocket.Core.Logging.Logger.Log("barricade name found");
+                    barricadename = itemAsset.itemName;
+               //     Rocket.Core.Logging.Logger.Log("barricade name found");
                     
 
                     bx = barricadetargeted.point.x;
                     by = barricadetargeted.point.y;
                     bz = barricadetargeted.point.z;
-                    Rocket.Core.Logging.Logger.Log("barricade location found");
+                  //  Rocket.Core.Logging.Logger.Log("barricade location found");
 
                     //and then send to discord webhook
 
 
                     owner = barricadetargeted.owner;
-                    Rocket.Core.Logging.Logger.Log("barricade owner found");
+                 //   Rocket.Core.Logging.Logger.Log("barricade owner found");
 
                     if (player != null)
                     {
                         url = player.SteamProfile.AvatarFull.ToString();
-                        Rocket.Core.Logging.Logger.Log("steam profile avatar found");
+                        //Rocket.Core.Logging.Logger.Log("steam profile avatar found");
                     }
                     else
                     {
                         url = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Question_mark_%28black%29.svg/200px-Question_mark_%28black%29.svg.png";
-                        Rocket.Core.Logging.Logger.Log("no player - url not done");
+                       // Rocket.Core.Logging.Logger.Log("no player - url not done");
                     }
 
                     
@@ -275,22 +356,42 @@ namespace Random.miscstuff
             }
             catch (Exception e)
             {
+                //uh oh! a barriacde has requested to break but hasn't broken!! Likely due to advanced regions nodestroy flag!!
                 var error = e;
                 Rocket.Core.Logging.Logger.Log("Exception caught: " + e);
-                Discord.SendWebhookPost("https://ptb.discord.com/api/webhooks/807221467204550666/yte_hGdNflFqCtW80uhnNR1O9a0uX8GNoz5xGdur9xfLjUvRhs2sIctPypJocXdSVHRU",
-                    Discord.BuildDiscordEmbed("Possible Exploit of infinite crops detected at" + hq + "HQ",
-                        "Possible exploit detected at: " + DateTime.Now,
-                        "Unknown Player", "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Question_mark_%28black%29.svg/200px-Question_mark_%28black%29.svg.png" , 16711680, new object[]
-                        {
-                            Discord.BuildDiscordField("Crop ID", itemid.ToString(), true),
-                            Discord.BuildDiscordField("Crop Position", "X: " + bx + " Y: " + by + " Z: " + bz,
-                                true),
-                            Discord.BuildDiscordField("Owner of this plant:", owner.ToString(),
-                                true),
+                bool found = false;
+                foreach (var spawner in miscstuff.Instance.Configuration.Instance.listofignoredexploitbarricades)
+                {
+                    if (itemid == spawner)
+                    {
+                        found = true;
+                    }
 
-                        }));
 
+                }
+
+                if (found==false)
+                {
+                    Discord.SendWebhookPost("https://ptb.discord.com/api/webhooks/807221467204550666/yte_hGdNflFqCtW80uhnNR1O9a0uX8GNoz5xGdur9xfLjUvRhs2sIctPypJocXdSVHRU",
+                        Discord.BuildDiscordEmbed("Possible Exploit of infinite crops detected at" + hq + "HQ",
+                            "Possible exploit detected at: " + DateTime.Now,
+                            "Unknown Player", "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Question_mark_%28black%29.svg/200px-Question_mark_%28black%29.svg.png", 16711680, new object[]
+                            {
+                                Discord.BuildDiscordField("Crop ID", itemid.ToString(), true),
+                                Discord.BuildDiscordField("Crop Name", barricadename, true),
+                                Discord.BuildDiscordField("Crop Position", "X: " + bx + " Y: " + by + " Z: " + bz,
+                                    true),
+                                Discord.BuildDiscordField("Owner of this plant:", owner.ToString(),
+                                    true),
+
+                            }));
+
+
+
+                }
             }
+
+                
         }
 
 
@@ -405,6 +506,9 @@ namespace Random.miscstuff
             player.Experience = (exp < uint.MinValue) ? uint.MinValue : (exp > uint.MaxValue) ? uint.MaxValue : (uint)exp;
             return (int)(change + player.Experience - exp);
         }
+
+
+
 
 
 

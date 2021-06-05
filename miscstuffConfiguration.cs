@@ -1,6 +1,7 @@
 ﻿using Rocket.API;
 using System;
 using System.Collections.Generic;
+using System.Xml.Serialization;
 
 namespace Random.miscstuff
 {
@@ -21,6 +22,8 @@ namespace Random.miscstuff
         public int MegaXP;
         public bool Siphon;        
         public List<Registereddoortype> listofregistereddoors;
+        [XmlArrayItem("ItemId")]  public List<ushort> listofblacklistedspawners;
+        [XmlArrayItem("ItemId")] public List<ushort> listofignoredexploitbarricades;
         
         public void LoadDefaults()
         {
@@ -40,6 +43,10 @@ namespace Random.miscstuff
                 "https://ptb.discordapp.com/api/webhooks/731832920544641045/L5vfn6rGJIAd3gzCulgASwshPmA1Jx5d4OYSDH4X6h3Mi4HykY8TE8lSsS-Gep65KsW-";
             hqalertchannel =
                 "https://ptb.discordapp.com/api/webhooks/731855861013807174/nq19tM__yYiub57hJbvRdN8KXG9DhuJ1t358z0XnnTkgKQOkmVRBMN5JSoknSLP4jNV0";
+            listofblacklistedspawners = new List<ushort>
+                { 76 };
+            listofignoredexploitbarricades = new List<ushort>
+                { 386};
         }
 	}
 }
