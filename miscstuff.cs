@@ -64,14 +64,20 @@ namespace Random.miscstuff
 
             R.Commands.OnExecuteCommand -= OnExecuteCommand;
 
-            var barricades = GetBarricades(CSteamID.Nil, false);
-            foreach (BarricadeData barricade in barricades)
+            //var barricades = GetBarricades(CSteamID.Nil, false);
+            List<BarricadeDrop> barricades = new List<BarricadeDrop>();
+            var br = BarricadeManager.regions;
+            foreach (BarricadeRegion barreg in br)
+            {
+                barricades.AddRange(barreg.drops);
+            }
+            foreach (BarricadeDrop barricade in barricades)
             {
                 foreach (Registereddoortype registereddoor in Configuration.Instance.listofregistereddoors)
                 {
                     if (registereddoor.ID == barricade.instanceID)
                     {
-                        registereddoor.doorposition = barricade.point;
+                        registereddoor.doorposition = barricade.model.position;
                     }
                 }
             }
@@ -157,22 +163,27 @@ namespace Random.miscstuff
             EDamageOrigin damageorigin)
         {
 
-            byte x;
-            byte y;
-            ushort index;
-            StructureRegion structureRegion;
+            //byte x;
+            //byte y;
+            //ushort index;
+            //StructureRegion structureRegion;
             string hq;
             hq = " ";
 
+            //ulong playerowner = BarricadeManager.FindBarricadeByRootTransform(barricade).GetServersideData().owner;
+            ulong playerowner = StructureManager.FindStructureByRootTransform(structure).GetServersideData().owner;
+            ushort id = StructureManager.FindStructureByRootTransform(structure).asset.id;
+            //var barricadetargeted = bar.            
 
-            StructureManager.tryGetInfo(structure, out x, out y, out index, out structureRegion);
-            StructureData structuretargeted = structureRegion.structures[index];
+            //StructureManager.tryGetInfo(structure, out x, out y, out index, out structureRegion);
+            //StructureData structuretargeted = structureRegion.structures[index];
+            Vector3 structuretargeted = structure.position;
            // if (structuretargeted.structure.health < num)
            // {
                 //if (((structuretargeted.point -axishq).sqrMagnitude <= 3600) || ((structuretargeted.point - allieshq).sqrMagnitude <= 3600))
                 Vector2 structurevector2;
-                structurevector2.x = structuretargeted.point.x;
-                structurevector2.y = structuretargeted.point.z;
+                structurevector2.x = structuretargeted.x;
+                structurevector2.y = structuretargeted.z;
                 if (((structurevector2 - axishq).magnitude <= 600) || (structurevector2 - allieshq).magnitude <= 600)
                 {
                     if ((structurevector2 - axishq).magnitude <= 600)
@@ -187,7 +198,7 @@ namespace Random.miscstuff
                     Rocket.Core.Logging.Logger.Log("Structure destroyed in HQ");
                     var player = UnturnedPlayer.FromCSteamID(steamid);
                     var steam64 = steamid;
-                    var itemid = structuretargeted.structure.id;
+                    var itemid = id;
                     ItemAsset itemAsset = (from i in new List<ItemAsset>(Assets.find(EAssetType.ITEM).Cast<ItemAsset>())
                         where i.itemName != null
                         orderby i.itemName.Length
@@ -196,13 +207,13 @@ namespace Random.miscstuff
                     //stole this from rockets /i command
                     var barricadename = itemAsset.itemName;
                     var url = player.SteamProfile.AvatarFull.ToString();
-                    var bx = structuretargeted.point.x;
-                    var by = structuretargeted.point.y;
-                    var bz = structuretargeted.point.z;
+                    var bx = structuretargeted.x;
+                    var by = structuretargeted.y;
+                    var bz = structuretargeted.z;
                     //and then send to discord webhook
 
 
-                    var owner = structuretargeted.owner;
+                    var owner = playerowner;
 
 
                     Discord.SendWebhookPost(Configuration.Instance.raidalertchannel,
@@ -231,11 +242,11 @@ namespace Random.miscstuff
             EDamageOrigin damageorigin)
         {
             //Logdamage(steamid, barricade,num2);
-            byte x;
-            byte y;
-            ushort num;
-            ushort index;
-            BarricadeRegion barricadeRegion;
+            //byte x;
+            //byte y;
+            //ushort num;
+            //ushort index;
+            //BarricadeRegion barricadeRegion;
             string hq;
             hq = " ";
             UnturnedPlayer player;
@@ -263,8 +274,14 @@ namespace Random.miscstuff
 
             
             {
-                BarricadeManager.tryGetInfo(barricade, out x, out y, out num, out index, out barricadeRegion);
-                BarricadeData barricadetargeted = barricadeRegion.barricades[index];
+
+                //BarricadeManager.tryGetInfo(barricade, out x, out y, out num, out index, out barricadeRegion);
+                //BarricadeData barricadetargeted = barricadeRegion.barricades[index];
+                ulong playerowner = BarricadeManager.FindBarricadeByRootTransform(barricade).GetServersideData().owner;
+                var id = BarricadeManager.FindBarricadeByRootTransform(barricade).asset.id;
+                //var barricadetargeted = bar.
+                Vector3 barricadetargeted = barricade.position;
+
                 //if (barricadetargeted.barricade.health < num2)
                 //{
                 //Rocket.Core.Logging.Logger.Log("Sqr Distance to Axis HQ: " + (barricadetargeted.point - axishq).sqrMagnitude);
@@ -273,8 +290,8 @@ namespace Random.miscstuff
                     ((barricadetargeted.point - allieshq).sqrMagnitude <= 3600))
                 */
                 Vector2 barricadevector2;
-                barricadevector2.x = barricadetargeted.point.x;
-                barricadevector2.y = barricadetargeted.point.z;
+                barricadevector2.x = barricadetargeted.x;
+                barricadevector2.y = barricadetargeted.z;
                 if (((barricadevector2 - axishq).magnitude <= 500) || (barricadevector2 - allieshq).magnitude <= 500)
                 {
                     if ((barricadevector2 - axishq).magnitude <= 500)
@@ -302,6 +319,7 @@ namespace Random.miscstuff
                     steam64 = steamid;
                   //  itemid = barricadetargeted.barricade.id;
                     Rocket.Core.Logging.Logger.Log("Barricade ID found");
+                    itemid = id;
                     ItemAsset itemAsset = (from i in new List<ItemAsset>(Assets.find(EAssetType.ITEM).Cast<ItemAsset>())
                         where i.itemName != null
                         orderby i.itemName.Length
@@ -312,15 +330,15 @@ namespace Random.miscstuff
                //     Rocket.Core.Logging.Logger.Log("barricade name found");
                     
 
-                    bx = barricadetargeted.point.x;
-                    by = barricadetargeted.point.y;
-                    bz = barricadetargeted.point.z;
+                    bx = barricadetargeted.x;
+                    by = barricadetargeted.y;
+                    bz = barricadetargeted.z;
                   //  Rocket.Core.Logging.Logger.Log("barricade location found");
 
                     //and then send to discord webhook
 
 
-                    owner = barricadetargeted.owner;
+                    owner = playerowner;
                  //   Rocket.Core.Logging.Logger.Log("barricade owner found");
 
                     if (player != null)
@@ -436,13 +454,19 @@ namespace Random.miscstuff
 
              } */
 
-            //AdvancedRegionsPlugin.Instance.RegionFlagManager.RegisterFlag<Logdamage>();
-            var barricades = GetBarricades(CSteamID.Nil, false);
-            foreach (BarricadeData barricade in barricades)
+            //AdvancedRegionsPlugin.Instance.RegionFlagManager.RegisterFlag<Logdamage>();            
+            //var barricades = GetBarricades(CSteamID.Nil, false);
+            List<BarricadeDrop> barricades = new List<BarricadeDrop>();
+            var br = BarricadeManager.regions;
+            foreach (BarricadeRegion barreg in br)
+            {
+                barricades.AddRange(barreg.drops);
+            }
+            foreach (BarricadeDrop barricade in barricades)
             {
                 foreach (Registereddoortype registereddoor in Configuration.Instance.listofregistereddoors)
                 {
-                    if (registereddoor.doorposition == barricade.point)
+                    if (registereddoor.doorposition == barricade.model.position)
                     {
                         registereddoor.ID = barricade.instanceID;
                         Rocket.Core.Logging.Logger.Log("Changed door " + registereddoor.name + " to instance ID " + barricade.instanceID);
@@ -457,15 +481,14 @@ namespace Random.miscstuff
 
 
 
-        public static IEnumerable<BarricadeData> GetBarricades(CSteamID id, bool includePlants)
-        {
-            var result = BarricadeManager.regions.Cast<BarricadeRegion>().SelectMany(brd => brd.barricades).ToList();
+        //public static IEnumerable<BarricadeData> GetBarricades(CSteamID id, bool includePlants)
+        //{
+        //    var result = BarricadeManager.regions.Cast<BarricadeRegion>().SelectMany(brd => brd.drops).ToList();            
+        //    if (includePlants)
+        //        result.AddRange(BarricadeManager.plants.SelectMany(region => region.barricades));
 
-            if (includePlants)
-                result.AddRange(BarricadeManager.plants.SelectMany(region => region.barricades));
-
-            return id == CSteamID.Nil ? result : result.Where(k => k.owner == (ulong)id);
-        }
+        //    return id == CSteamID.Nil ? result : result.Where(k => k.owner == (ulong)id);
+        //}
 
         public void OnTransformRequested(CSteamID instigator, byte x, byte y, ushort plant, uint instanceID,ref Vector3 point, ref byte angle_x,ref byte angle_y, ref byte angle_z, ref bool shouldAllow)
         {

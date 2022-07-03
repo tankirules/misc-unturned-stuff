@@ -39,13 +39,14 @@ namespace Random.miscstuff
                 bool isregistered = false;
                 InteractableDoor door = component.door;
                 bool flag = !door.isOpen;
-                byte x;
-                byte y;
-                ushort plant;
-                ushort index;
-                BarricadeRegion barricadeRegion;
-                BarricadeManager.tryGetInfo(door.transform, out x, out y, out plant, out index, out barricadeRegion);
-                BarricadeDrop barricadedrop = barricadeRegion.drops[index];
+                //byte x;
+                //byte y;
+                //ushort plant;
+                //ushort index;
+                //BarricadeRegion barricadeRegion;
+                //BarricadeManager.tryGetInfo(door.transform, out x, out y, out plant, out index, out barricadeRegion);
+                var bruh = BarricadeManager.FindBarricadeByRootTransform(door.transform);
+                BarricadeDrop barricadedrop = bruh;
                 var ID = barricadedrop.instanceID;
                 foreach (Registereddoortype doorinfo in miscstuff.Instance.Configuration.Instance.listofregistereddoors)
                 {
@@ -58,15 +59,16 @@ namespace Random.miscstuff
                             //OPEN THE DOOOOOOOR
                             Rocket.Core.Logging.Logger.Log("Player has perm: " + doorinfo.permission);
                             SteamCaller steamCaller = (BarricadeManager)typeof(BarricadeManager).GetField("manager", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
-                            door.updateToggle(flag);
-                            steamCaller.channel.send("tellToggleDoor", ESteamCall.ALL, ESteamPacket.UPDATE_RELIABLE_BUFFER, new object[]
-                             {
-                               x,
-                               y,
-                               plant,
-                               index,
-                               flag
-                          });
+                            bool isopen = door.isOpen;
+                            if (isopen)
+                            {
+                                BarricadeManager.ServerSetDoorOpen(door, false);
+                            }
+                            else
+                            {
+                                BarricadeManager.ServerSetDoorOpen(door, true);
+                            }
+                                                    
                             Rocket.Core.Logging.Logger.Log("Player toggled door " + doorinfo.ID);
                             UnturnedChat.Say(caller, doorinfo.name + " door toggled", Color.yellow);
                         }
