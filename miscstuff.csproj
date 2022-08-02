@@ -81,6 +81,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="exactangle.cs" />
+    <Compile Include="calculatepreciseangle.cs" />
     <Compile Include="changedoorperm.cs" />
     <Compile Include="customdoorperm.cs" />
     <Compile Include="Discord.cs" />
@@ -96,6 +98,7 @@
     <Compile Include="miscstuffConfiguration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Unregisterdoor.cs" />
+    <Compile Include="Viewanglecommand.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

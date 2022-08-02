@@ -24,7 +24,8 @@ namespace Random.miscstuff
         public List<Registereddoortype> listofregistereddoors;
         [XmlArrayItem("ItemId")]  public List<ushort> listofblacklistedspawners;
         [XmlArrayItem("ItemId")] public List<ushort> listofignoredexploitbarricades;
-        
+        [XmlArrayItem("ItemId")] public List<ushort> artycalculatorids;
+
         public void LoadDefaults()
         {
             alliesy = 1003;
@@ -47,6 +48,8 @@ namespace Random.miscstuff
                 { 76 };
             listofignoredexploitbarricades = new List<ushort>
                 { 386};
+            artycalculatorids = new List<ushort>
+                { 30129 };
         }
 	}
 }

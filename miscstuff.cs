@@ -17,25 +17,44 @@ using System.Linq;
 using JetBrains.Annotations;
 using Rocket.Core.Commands;
 using UnityEngine.Assertions.Comparers;
+using Rocket.Unturned;
 
 namespace Random.miscstuff
 {
     public class miscstuff : RocketPlugin<miscstuffConfiguration>
     {
+        public Dictionary<Player, Coroutine> calcangle;
+        //public Dictionary<Player, Coroutine> rangefinding;
         public static miscstuff Instance;
         public static miscstuffConfiguration Config;
         /*public Vector3 axishq;
         public Vector3 allieshq;*/
         public Vector2 axishq;
         public Vector2 allieshq;
+        public Dictionary<Player, Coroutine> viewangledict;
+        public int key = 400;
+        public int rangefindkey = 786;
+        public ushort viewangleid = 30365;
+        public ushort rangefindid = 30366;
         protected override void Load()
         {
+            //IMPORTANT: SERVER WIDE EFFECT
+            PlayerMovement.forceTrustClient = true;
+            //DISABLE IF SOMETHING GOES WRNOG
+
+            calcangle = new Dictionary<Player, Coroutine>();
+            //rangefinding = new Dictionary<Player, Coroutine>();
+            viewangledict = new Dictionary<Player, Coroutine>();
             UnturnedPlayerEvents.OnPlayerUpdateStat += OnPlayerUpdateStat;
             VehicleManager.onSiphonVehicleRequested += onVehicleSiphoning;
             BarricadeManager.onTransformRequested += OnTransformRequested;
+            VehicleManager.onExitVehicleRequested += onexitvehicle;
+            U.Events.OnPlayerDisconnected += OnPlayerDisconnection;
+
             Level.onLevelLoaded += OnLevelLoaded;
             Instance = this;
             Config = Instance.Configuration.Instance;
+
             Rocket.Core.Logging.Logger.Log("Plugin Loaded");
             BarricadeManager.onDamageBarricadeRequested += OnDamageBarricade;
             StructureManager.onDamageStructureRequested += OnDamageStructure;
@@ -50,7 +69,7 @@ namespace Random.miscstuff
             //BarricadeManager.onDeployBarricadeRequested += onBarricadeDeploy;
             // a barricade isn't spawned at all when vehicle barricade is used
         }
-        
+                
 
         protected override void Unload()
         {
@@ -61,6 +80,8 @@ namespace Random.miscstuff
             Level.onLevelLoaded -= OnLevelLoaded;
             BarricadeManager.onDamageBarricadeRequested -= OnDamageBarricade;
             StructureManager.onDamageStructureRequested -= OnDamageStructure;
+            VehicleManager.onExitVehicleRequested -= onexitvehicle;
+            U.Events.OnPlayerDisconnected -= OnPlayerDisconnection;
 
             R.Commands.OnExecuteCommand -= OnExecuteCommand;
 
@@ -87,6 +108,168 @@ namespace Random.miscstuff
 
         }
 
+        public void startrangefinding(IRocketPlayer RP)
+        {
+            
+            var up = (UnturnedPlayer)RP;
+            //if already calculating
+            calcangle.TryGetValue(up.Player, out var cor);
+            if (!(cor == null))
+            {
+                StopCoroutine(cor);
+            }
+
+            EffectManager.askEffectClearByID(rangefindid, up.Player.channel.owner.transportConnection);
+            EffectManager.sendUIEffect(rangefindid, (short)rangefindkey, up.Player.channel.owner.transportConnection, true, "", "Calculating Firing Solution", "");
+
+            Coroutine start = StartCoroutine(precisedelay(RP));
+            calcangle[up.Player] = start;
+
+        }
+        public void rangefind(IRocketPlayer RP)
+        {
+            //RP is the player who callled the command
+            float force = (6000 / 50);
+            float gravity = 9.82f;
+
+
+            Player player = ((UnturnedPlayer)RP).Player;
+            UnturnedPlayer up = (UnturnedPlayer)RP;
+
+            Vector3 marker = player.quests.markerPosition;
+            Vector2 targetposition;
+            targetposition.x = marker.x;
+            targetposition.y = marker.z;
+
+            //if player not in vehicle, return
+            var vehicle = up.CurrentVehicle;
+            if (vehicle == null)
+            {
+                UnturnedChat.Say(RP, "You are not in a vehicle!", Color.red);
+                return;
+            }
+            //rangefind for every turret
+            foreach (Passenger passenger in vehicle.turrets)
+            {
+                Vector2 playerpos;
+                playerpos.x = passenger.player.player.look.aim.position.x;
+                playerpos.y = passenger.player.player.look.aim.position.z;
+                var distance = Vector2.Distance(playerpos, targetposition);
+
+                Player pass = passenger.player.player;
+                UnturnedPlayer unturnedp = UnturnedPlayer.FromPlayer(pass); 
+
+                float AngleSin = (distance * gravity) / (force * force);
+                if (double.IsNaN(Math.Asin(AngleSin)))
+                {
+                    UnturnedChat.Say(unturnedp, "Out of Range!", Color.red);
+                    return;
+                }
+                float AngleDeg = (float)(Math.Asin(AngleSin) * (180 / Math.PI)) / 2;
+
+                var bearing = Mathf.Atan2(targetposition.y - playerpos.y, targetposition.x - playerpos.x) * Mathf.Rad2Deg;
+                key = key + 1;
+                var random = new System.Random();
+
+                //generate number between -5 and 5
+                var temprandom = random.Next(0, 10);
+                temprandom = temprandom - 5;
+                //add in random deviation (5%)
+                AngleDeg = AngleDeg + (AngleDeg * temprandom / 100);
+
+                string calc = "Angle: " + AngleDeg + " Bearing: " + bearing + " Distance: " + distance;
+
+                UnturnedChat.Say(unturnedp, calc);
+                UnturnedChat.Say(unturnedp, "Playerpos: " + playerpos + " markerpos + " + targetposition);
+                EffectManager.askEffectClearByID(rangefindid, pass.channel.owner.transportConnection);
+                EffectManager.sendUIEffect(rangefindid, (short)rangefindkey, pass.channel.owner.transportConnection, true, "Angle: " + AngleDeg, "Bearing: " + bearing, "Distance: " +  distance);
+
+            }
+
+            
+
+            
+        }
+        public IEnumerator precisedelay(IRocketPlayer RP)
+        {
+            yield return new WaitForSeconds(8);
+            rangefind(RP);
+
+        }
+        private void onexitvehicle(Player player, InteractableVehicle vehicle, ref bool shouldAllow, ref Vector3 pendingLocation, ref float pendingYaw)
+        {
+            //check if viewangle ui or calc angle are active and if so cancel them
+            viewangledict.TryGetValue(player, out var cor);
+            if (!(cor == null))
+            {
+                StopCoroutine(cor);
+            }
+
+            //do the same for rangefinding
+            calcangle.TryGetValue(player, out var calccor);
+            if (!(calccor == null))
+            {
+                StopCoroutine(calccor);
+            }
+
+            viewangledict.Remove(player);
+            EffectManager.askEffectClearByID(viewangleid, player.channel.owner.transportConnection);
+            EffectManager.askEffectClearByID(rangefindid, player.channel.owner.transportConnection);
+        }
+
+        public void OnPlayerDisconnection(UnturnedPlayer player)
+        {
+            var p = player.Player;
+            viewangledict.TryGetValue(p, out var cor);
+            if (!(cor == null))
+            {
+                StopCoroutine(cor);
+            }
+            viewangledict.Remove(p);
+        }
+        public void toggleviewangle(Player player)
+        {
+            if (Instance.viewangledict.ContainsKey(player)) {
+                //then stop
+                Instance.viewangledict.TryGetValue(player, out var cor);
+                if (!(cor == null))
+                {
+                    StopCoroutine(cor);
+                }
+                viewangledict.Remove(player);
+                EffectManager.askEffectClearByID(viewangleid, player.channel.owner.transportConnection);
+            }
+            else
+            {
+                Coroutine newcor = StartCoroutine(viewangle(player));
+                viewangledict[player] = newcor;
+            }
+
+        }
+
+
+
+        public IEnumerator viewangle(Player player)
+        {
+            key = key + 1;
+            while (true)
+                {
+                yield return new WaitForSeconds(0.05f);
+                var up = UnturnedPlayer.FromPlayer(player);
+                if (up.CurrentVehicle == null)
+                {
+                    continue;
+                }
+                float pitch = up.Player.look.pitch;
+                float realpitch = 90 - pitch;
+                float rounded = (float)(Math.Round(realpitch, 3));
+                //VIEWANGLE EFFECT HERE
+                //Rocket.Core.Logging.Logger.Log("sending ui effect");
+                EffectManager.sendUIEffect(viewangleid, (short)key, player.channel.owner.transportConnection, true, rounded.ToString());
+
+
+            }
+        }
         /*public void onBarricadeDeploy(Barricade barricade, ItemBarricadeAsset asset, Transform hit, ref Vector3 point,
             ref float angle_x, ref float angle_y, ref float angle_z, ref ulong owner, ref ulong group,
             ref bool shouldAllow)

@@ -44,20 +44,22 @@ namespace Random.miscstuff
                 var name = args[0];
                 var permissionname = args[1];
                 InteractableDoor door = component.door;
-                byte x;
-                byte y;
-                ushort plant;
-                ushort index;
+                //byte x;
+                //byte y;
+                //ushort plant;
+                //ushort index;
                 
-                BarricadeRegion barricadeRegion;
-                BarricadeManager.tryGetInfo(door.transform, out x, out y, out plant, out index, out barricadeRegion);
+                //BarricadeRegion barricadeRegion;
+                //BarricadeManager.tryGetInfo(door.transform, out x, out y, out plant, out index, out barricadeRegion);
+                var b = BarricadeManager.FindBarricadeByRootTransform(door.transform);
                 var permission = "Registereddoor." + permissionname;
                 Registereddoortype tempvar = new Registereddoortype();
                 tempvar.name = name;
                 tempvar.permission = permission;
                 tempvar.steamid = PlayerCaller.CSteamID.ToString();
                 tempvar.doorposition = door.transform.position;
-                BarricadeDrop barricadedrop = barricadeRegion.drops[index];
+                //BarricadeDrop barricadedrop = barricadeRegion.drops[index];
+                BarricadeDrop barricadedrop = b;
                 var ID = barricadedrop.instanceID;
                 tempvar.ID = ID;
                 if (miscstuff.Instance.Configuration.Instance.listofregistereddoors.Count > 0 ){
